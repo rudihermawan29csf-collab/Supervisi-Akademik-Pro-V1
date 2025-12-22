@@ -8,6 +8,7 @@ interface MainDashboardViewProps {
   adminRecords: AdminRecord[];
   extraRecords: ExtraRecord[];
   instrumentResults: Record<string, InstrumentResult>;
+  setSettings: (s: AppSettings) => void;
   onRefresh?: () => void;
 }
 
@@ -32,7 +33,7 @@ const formatName = (str: string) => {
   return formatted;
 };
 
-const MainDashboardView: React.FC<MainDashboardViewProps> = ({ records, settings, adminRecords, extraRecords, instrumentResults }) => {
+const MainDashboardView: React.FC<MainDashboardViewProps> = ({ records, settings, adminRecords, extraRecords, instrumentResults, setSettings }) => {
   const activeSemester = settings.semester;
   const [activeTab, setActiveTab] = useState<'akademik' | 'tendik' | 'extra'>('akademik');
 
@@ -196,9 +197,26 @@ const MainDashboardView: React.FC<MainDashboardViewProps> = ({ records, settings
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 no-print">
-        <div>
-          <h2 className="text-xl font-black uppercase tracking-tight">Dashboard Monitoring</h2>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{settings.namaSekolah} • SEMESTER {activeSemester}</p>
+        <div className="flex flex-col gap-2">
+          <div>
+            <h2 className="text-xl font-black uppercase tracking-tight">Dashboard Monitoring</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{settings.namaSekolah} • TP {settings.tahunPelajaran}</p>
+          </div>
+          {/* SEMESTER SELECTOR IN DASHBOARD */}
+          <div className="flex bg-blue-600/5 p-1 rounded-xl border border-blue-100 self-start">
+             <button 
+               onClick={() => setSettings({...settings, semester: 'Ganjil'})} 
+               className={`px-6 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${activeSemester === 'Ganjil' ? 'bg-blue-600 text-white shadow-md' : 'text-blue-600 hover:bg-blue-100'}`}
+             >
+               Semester Ganjil
+             </button>
+             <button 
+               onClick={() => setSettings({...settings, semester: 'Genap'})} 
+               className={`px-6 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${activeSemester === 'Genap' ? 'bg-blue-600 text-white shadow-md' : 'text-blue-600 hover:bg-blue-100'}`}
+             >
+               Semester Genap
+             </button>
+          </div>
         </div>
         <div className="flex gap-2 bg-slate-100 p-1 rounded-xl shadow-inner">
            <button onClick={() => setActiveTab('akademik')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${activeTab === 'akademik' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Akademik Guru</button>

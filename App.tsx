@@ -126,6 +126,11 @@ const App: React.FC = () => {
     triggerCloudSync({ records: newRecords });
   }, [settings, pttRecords, extraRecords, adminRecords, instrumentResults, uploadedSchedules]);
 
+  const handleUpdateSettings = (newSettings: AppSettings) => {
+    setSettings(newSettings);
+    triggerCloudSync({ settings: newSettings });
+  };
+
   const handleSaveInstrument = (teacherId: number, type: string, semester: string, data: InstrumentResult) => {
     const key = `${teacherId}-${type}-${semester}`;
     const newResults = { ...instrumentResults, [key]: data };
@@ -277,7 +282,7 @@ const App: React.FC = () => {
              </div>
            ) : (
             <div className="max-w-6xl mx-auto">
-              {activeView === 'dashboard' && <MainDashboardView records={records} settings={settings} adminRecords={adminRecords} extraRecords={extraRecords} instrumentResults={instrumentResults} />}
+              {activeView === 'dashboard' && <MainDashboardView records={records} settings={settings} setSettings={handleUpdateSettings} adminRecords={adminRecords} extraRecords={extraRecords} instrumentResults={instrumentResults} />}
               {activeView === 'settings' && <SettingsView settings={settings} setSettings={setSettings} records={records} setRecords={handleUpdateRecords} uploadedSchedules={uploadedSchedules} setUploadedSchedules={setUploadedSchedules} pttRecords={pttRecords} setPttRecords={setPttRecords} />}
               
               {activeView === 'supervision' && <SupervisionView records={records} searchQuery={searchQuery} setSearchQuery={setSearchQuery} onSelect={setSelectedRecord} onUpdateRecords={handleUpdateRecords} settings={settings} setSettings={setSettings} />}
