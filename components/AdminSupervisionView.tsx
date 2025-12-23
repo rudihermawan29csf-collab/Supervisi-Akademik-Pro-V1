@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { TeacherRecord, SupervisionStatus, AppSettings } from '../types';
 
@@ -89,22 +90,31 @@ const AdminSupervisionView: React.FC<AdminSupervisionViewProps> = ({ records, on
     const end = new Date(endDate);
     let currentDate = new Date(start);
     
+    // Get master list of teachers (unique by name) to handle empty semesters
+    // Fix: Explicitly type masterTeachers as TeacherRecord[] to avoid 'unknown' type inference errors
+    const masterTeachers: TeacherRecord[] = Array.from(new Map<string, TeacherRecord>(records.map(r => [r.namaGuru, r])).values());
     const otherSemesterRecords = records.filter(r => r.semester !== activeSemester);
-    const updated = records.filter(r => r.semester === activeSemester).map((teacher, index) => {
+    
+    const updated = masterTeachers.map((tpl, index) => {
       // Skip Sundays
-      if (currentDate.getDay() === 0) currentDate.setDate(currentDate.getDate() + 1); 
+      while (currentDate.getDay() === 0) currentDate.setDate(currentDate.getDate() + 1); 
       // Reset if past end date
       if (currentDate > end) currentDate = new Date(start);
       
       const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
       const dayNameStr = dayNames[currentDate.getDay()];
       
-      // Determine Supervisor and Place based on assignment
-      let supervisor = assignedToSup1.includes(teacher.id) ? sup1 : (assignedToSup2.includes(teacher.id) ? sup2 : sup1);
-      let loc = assignedToSup1.includes(teacher.id) ? tempat1 : (assignedToSup2.includes(teacher.id) ? tempat2 : tempat1);
+      // Determine Supervisor and Place
+      let supervisor = assignedToSup1.includes(tpl.id) ? sup1 : (assignedToSup2.includes(tpl.id) ? sup2 : sup1);
+      let loc = assignedToSup1.includes(tpl.id) ? tempat1 : (assignedToSup2.includes(tpl.id) ? tempat2 : tempat1);
       
-      const res = { 
-        ...teacher, 
+      // For Genap, we use a new ID if it's a clone
+      const newId = activeSemester === 'Genap' ? (tpl.no + 1000) : tpl.id;
+
+      const res: TeacherRecord = { 
+        ...tpl, 
+        id: newId,
+        semester: activeSemester,
         tanggalAdm: currentDate.toISOString().split('T')[0], 
         hari: dayNameStr, 
         pukul: '08.00 - 09.30', 
@@ -113,13 +123,13 @@ const AdminSupervisionView: React.FC<AdminSupervisionViewProps> = ({ records, on
         status: SupervisionStatus.PENDING 
       };
       
-      // Increment date
+      // Increment date for next teacher (assuming 1 per day or handle logic as needed)
       currentDate.setDate(currentDate.getDate() + 1);
       return res;
     });
     
     onUpdateRecords([...otherSemesterRecords, ...updated]);
-    alert('Jadwal Administrasi Guru berhasil diperbarui!');
+    alert(`Jadwal Administrasi Guru semester ${activeSemester} berhasil disusun ulang!`);
   };
 
   const exportPDF = () => {
@@ -156,7 +166,7 @@ const AdminSupervisionView: React.FC<AdminSupervisionViewProps> = ({ records, on
           </div>
         </div>
 
-        {/* Configuration Inputs - FULL RESTORATION */}
+        {/* Configuration Inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
            <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase">Tanggal Mulai</label>
@@ -193,6 +203,9 @@ const AdminSupervisionView: React.FC<AdminSupervisionViewProps> = ({ records, on
                     {teacher.namaGuru}
                   </label>
                 ))}
+                {records.filter(r => r.semester === activeSemester).length === 0 && (
+                   <p className="text-[10px] text-slate-400 italic">Generate jadwal terlebih dahulu untuk memunculkan daftar.</p>
+                )}
             </div>
           </div>
           <div className="space-y-2 bg-white p-4 rounded-xl border border-emerald-100">
@@ -207,6 +220,9 @@ const AdminSupervisionView: React.FC<AdminSupervisionViewProps> = ({ records, on
                     {teacher.namaGuru}
                   </label>
                 ))}
+                {records.filter(r => r.semester === activeSemester).length === 0 && (
+                   <p className="text-[10px] text-slate-400 italic">Generate jadwal terlebih dahulu untuk memunculkan daftar.</p>
+                )}
             </div>
           </div>
         </div>
@@ -234,7 +250,7 @@ const AdminSupervisionView: React.FC<AdminSupervisionViewProps> = ({ records, on
             </tr>
           </thead>
           <tbody>
-            {filteredRecords.map((r, i) => (
+            {filteredRecords.length > 0 ? filteredRecords.map((r, i) => (
               <tr key={r.id}>
                 <td className="px-2 py-2 border border-slate-800 text-center">{i + 1}</td>
                 <td className="px-4 py-2 border border-slate-800 font-bold text-center">{r.hari}, {formatIndonesianDate(r.tanggalAdm || '')}</td>
@@ -242,7 +258,9 @@ const AdminSupervisionView: React.FC<AdminSupervisionViewProps> = ({ records, on
                 <td className="px-4 py-2 border border-slate-800 font-bold">{r.pewawancara || '-'}</td>
                 <td className="px-4 py-2 border border-slate-800">{r.tempat || '-'}</td>
               </tr>
-            ))}
+            )) : (
+              <tr><td colSpan={5} className="py-20 text-center italic text-slate-400 uppercase tracking-widest">Jadwal belum tersedia for semester ini. Atur tanggal and klik "Generate Jadwal".</td></tr>
+            )}
           </tbody>
         </table>
 

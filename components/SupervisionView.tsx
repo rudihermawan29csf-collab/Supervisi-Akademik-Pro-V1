@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { TeacherRecord, SupervisionStatus, AppSettings } from '../types';
 import { FULL_SCHEDULE, SCHEDULE_TEACHERS } from '../constants';
@@ -76,11 +77,13 @@ const SupervisionView: React.FC<SupervisionViewProps> = ({ records, searchQuery,
     const end = new Date(endDate);
     let currentDate = new Date(start);
     
-    const currentSemesterRecords = records.filter(r => r.semester === activeSemester);
+    // Master list of teachers (unique by name)
+    // Fix: Explicitly type masterTeachers as TeacherRecord[] to resolve 'unknown' type errors during mapping.
+    const masterTeachers: TeacherRecord[] = Array.from(new Map<string, TeacherRecord>(records.map(r => [r.namaGuru, r])).values());
     const otherSemesterRecords = records.filter(r => r.semester !== activeSemester);
     
-    const generated: TeacherRecord[] = currentSemesterRecords.map((teacher) => {
-      const teacherData = SCHEDULE_TEACHERS.find(t => t.nama === teacher.namaGuru);
+    const generated: TeacherRecord[] = masterTeachers.map((teacherTemplate) => {
+      const teacherData = SCHEDULE_TEACHERS.find(t => t.nama === teacherTemplate.namaGuru);
       const teacherInitials = teacherData?.kode || '';
       
       let foundSlot = false;
@@ -102,13 +105,19 @@ const SupervisionView: React.FC<SupervisionViewProps> = ({ records, searchQuery,
                   const [className] = teachingEntry;
                   foundSlot = true;
                   const dateStr = currentDate.toISOString().split('T')[0];
-                  const res = { 
-                    ...teacher, 
+                  
+                  // For Genap, we use a new ID if it's a clone
+                  const newId = activeSemester === 'Genap' ? (teacherTemplate.no + 2000) : teacherTemplate.id;
+
+                  const res: TeacherRecord = { 
+                    ...teacherTemplate, 
+                    id: newId,
+                    semester: activeSemester,
                     tanggalPemb: dateStr, 
                     hari: dayNameStr, 
                     kelas: className, 
                     jamKe: String(row.ke), 
-                    pewawancara: supervisorName, // Set supervisor here
+                    pewawancara: supervisorName,
                     status: SupervisionStatus.PENDING 
                   };
                   currentDate.setDate(currentDate.getDate() + 1);
@@ -121,7 +130,7 @@ const SupervisionView: React.FC<SupervisionViewProps> = ({ records, searchQuery,
         currentDate.setDate(currentDate.getDate() + 1);
         safetyCounter++;
       }
-      return { ...teacher, pewawancara: supervisorName };
+      return { ...teacherTemplate, id: activeSemester === 'Genap' ? (teacherTemplate.no + 2000) : teacherTemplate.id, semester: activeSemester, pewawancara: supervisorName };
     });
 
     onUpdateRecords([...otherSemesterRecords, ...generated]);
@@ -210,7 +219,7 @@ const SupervisionView: React.FC<SupervisionViewProps> = ({ records, searchQuery,
                 <td className="px-4 py-4 border border-slate-800 font-medium uppercase text-slate-600">{r.pewawancara || '-'}</td>
               </tr>
             )) : (
-              <tr><td colSpan={7} className="text-center py-20 italic text-slate-400 border border-slate-800 uppercase tracking-widest">Jadwal belum tersedia. Silahkan atur tanggal dan klik generate.</td></tr>
+              <tr><td colSpan={7} className="text-center py-20 italic text-slate-400 border border-slate-800 uppercase tracking-widest">Jadwal belum tersedia. Silahkan atur tanggal and klik generate.</td></tr>
             )}
           </tbody>
         </table>
