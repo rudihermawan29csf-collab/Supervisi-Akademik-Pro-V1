@@ -16,7 +16,7 @@ const getAutoFeedback = (percentage: number) => {
   if (percentage >= 91) return { catatan: "ATP disusun dengan sangat sistematis, alur tujuan pembelajaran linear and mencakup seluruh elemen CP.", tindakLanjut: "Pertahankan kualitas perumusan ATP and pastikan ketersediaan sumber belajar pendukung yang relevan." };
   if (percentage >= 81) return { catatan: "ATP sudah memenuhi standar teknis, namun sinkronisasi antar elemen kompetensi perlu sedikit diperhalus.", tindakLanjut: "Review kembali bagian kriteria variasi tujuan untuk memastikan tantangan belajar yang lebih merata bagi siswa." };
   if (percentage >= 71) return { catatan: "ATP sudah mencakup identitas CP, namun urutan penguasaan kompetensi dari mudah ke sulit belum terlihat jelas.", tindakLanjut: "Lakukan restrukturisasi alur tujuan agar lebih logis and memudahkan transisi antar materi ajar." };
-  return { catatan: "ATP belum menggambarkan alur pembelajaran yang utuh and elemen Profil Pelajar Pancasila belum terintegrasi.", tindakLanjut: "Revisi total dokumen ATP dengan bimbingan dari tim kurikulum atau pengawas sekolah." };
+  return { catatan: "ATP belum menggambarkan alur pembelajaran yang utuh and elemen Profil Pelajar Pancasila belum terintegrasi.", tindakLanjut: "Revisi total dokumen ATP with bimbingan dari tim kurikulum atau pengawas sekolah." };
 };
 
 const ATP_GROUPS: ATPGroup[] = [
@@ -72,7 +72,7 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
 
   const handleScoreChange = (id: number, val: number) => { 
     setScores(prev => ({ ...prev, [id]: val })); 
-    let autoRem = val === 2 ? "Lengkap & Sesuai" : val === 1 ? "Ada, Tidak Sesuai" : "Tidak Ada";
+    let autoRem = val === 2 ? "Sesuai" : val === 1 ? "Kurang Sesuai" : "Tidak Sesuai";
     setRemarks(prev => ({ ...prev, [id]: autoRem }));
   };
 
@@ -90,7 +90,7 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
 
   const exportWord = () => {
     const content = document.getElementById('atp-export-area')?.innerHTML;
-    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; font-size: 9pt; }</style></head><body>";
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; font-size: 10pt; }</style></head><body>";
     const footer = "</body></html>";
     const blob = new Blob([header + content + footer], { type: 'application/msword' });
     const link = document.createElement("a");
@@ -99,7 +99,6 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
     link.click();
   };
 
-  // Dynamic Supervisor info
   const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
   const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
@@ -144,7 +143,7 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
             </tr>
             <tr className="bg-slate-50 font-bold text-center">
               <th className="border-2 border-slate-900 p-1 w-20">Sesuai (2)</th>
-              <th className="border-2 border-slate-900 p-1 w-20">Tidak Sesuai (1)</th>
+              <th className="border-2 border-slate-900 p-1 w-20">Kurang (1)</th>
               <th className="border-2 border-slate-900 p-1 w-16 text-[9px]">Tidak (0)</th>
             </tr>
           </thead>
@@ -185,33 +184,36 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
            </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-3 gap-4 items-start text-sm font-bold tracking-tight text-center px-4">
-            <div>
-               <p className="uppercase leading-tight mb-20">Guru yang di Supervisi</p>
+        <div className="mt-12 grid grid-cols-3 gap-4 text-sm font-bold tracking-tight text-center px-4">
+            <div className="flex flex-col justify-between h-36">
+               <p className="leading-tight uppercase">
+                 Mengetahui,<br/>
+                 Kepala Sekolah
+               </p>
                <div>
-                 <p className="underline uppercase font-black">{selectedTeacher?.namaGuru || '....................'}</p>
-                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
+                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
+                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
                </div>
             </div>
-            <div>
-              {supervisorName !== settings.namaKepalaSekolah && (
+            <div className="flex flex-col justify-between h-36">
+              {supervisorName !== settings.namaKepalaSekolah ? (
                 <>
-                   <p className="leading-tight uppercase mb-20">Supervisor</p>
+                   <p className="leading-tight uppercase">Supervisor</p>
                    <div>
                      <p className="underline uppercase font-black">{supervisorName}</p>
                      <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {supervisorNIP}</p>
                    </div>
                 </>
-              )}
+              ) : <div></div>}
             </div>
-            <div>
-               <p className="leading-tight uppercase mb-20">
+            <div className="flex flex-col justify-between h-36">
+               <p className="uppercase leading-tight">
                  Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
-                 Mengetahui, Kepala Sekolah
+                 Guru yang di Supervisi
                </p>
                <div>
-                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
-                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
+                 <p className="underline uppercase font-black">{selectedTeacher?.namaGuru || '....................'}</p>
+                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
                </div>
             </div>
         </div>

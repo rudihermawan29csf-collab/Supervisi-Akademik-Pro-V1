@@ -101,7 +101,6 @@ const TelaahModulAjar: React.FC<Props> = ({ settings, setSettings, records, inst
     link.click();
   };
 
-  // Lookup supervisor info
   const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
   const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
@@ -182,33 +181,36 @@ const TelaahModulAjar: React.FC<Props> = ({ settings, setSettings, records, inst
            </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-3 gap-4 items-start text-sm font-bold tracking-tight text-center px-4">
-            <div>
-               <p className="uppercase leading-tight mb-20">Guru yang di Supervisi</p>
+        <div className="mt-12 grid grid-cols-3 gap-4 text-sm font-bold tracking-tight text-center px-4">
+            <div className="flex flex-col justify-between h-36">
+               <p className="uppercase leading-tight">
+                 Mengetahui,<br/>
+                 Kepala Sekolah
+               </p>
                <div>
-                 <p className="underline uppercase font-black">{selectedTeacher?.namaGuru || '....................'}</p>
-                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
+                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
+                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
                </div>
             </div>
-            <div>
-              {supervisorName !== settings.namaKepalaSekolah && (
+            <div className="flex flex-col justify-between h-36">
+              {supervisorName !== settings.namaKepalaSekolah ? (
                 <>
-                   <p className="leading-tight uppercase mb-20">Supervisor</p>
+                   <p className="leading-tight uppercase">Supervisor</p>
                    <div>
                      <p className="underline uppercase font-black">{supervisorName}</p>
                      <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {supervisorNIP}</p>
                    </div>
                 </>
-              )}
+              ) : <div></div>}
             </div>
-            <div>
-               <p className="leading-tight uppercase mb-20">
+            <div className="flex flex-col justify-between h-36">
+               <p className="uppercase leading-tight">
                  Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
-                 Mengetahui, Kepala Sekolah
+                 Guru yang di Supervisi
                </p>
                <div>
-                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
-                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
+                 <p className="underline uppercase font-black">{selectedTeacher?.namaGuru || '....................'}</p>
+                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
                </div>
             </div>
         </div>
