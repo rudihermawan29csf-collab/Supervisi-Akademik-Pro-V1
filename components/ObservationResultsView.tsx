@@ -74,6 +74,10 @@ const ObservationResultsView: React.FC<Props> = ({ settings, setSettings, record
     link.click();
   };
 
+  // Dynamic Supervisor info
+  const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
+
   return (
     <div className="space-y-6 animate-fadeIn pb-20">
       <div className="flex flex-col md:flex-row justify-between items-center no-print bg-white p-4 rounded-2xl shadow-sm border border-slate-100 gap-4">
@@ -100,7 +104,7 @@ const ObservationResultsView: React.FC<Props> = ({ settings, setSettings, record
         <div className="grid grid-cols-1 gap-y-1 text-sm font-bold mb-8">
            <div className="flex items-start"><span className="w-40 uppercase">Nama Guru</span><span className="mr-4">:</span><span className="uppercase text-blue-800">{selectedTeacher?.namaGuru || '...................'}</span></div>
            <div className="flex items-start"><span className="w-40 uppercase">Mata Pelajaran</span><span className="mr-4">:</span><span className="italic">{selectedTeacher?.mataPelajaran || '...................'}</span></div>
-           <div className="flex items-start"><span className="w-40 uppercase">Pewawancara</span><span className="mr-4">:</span><span>{selectedTeacher?.pewawancara || settings.namaKepalaSekolah}</span></div>
+           <div className="flex items-start"><span className="w-40 uppercase">Pewawancara</span><span className="mr-4">:</span><span>{supervisorName}</span></div>
         </div>
 
         <table className="w-full border-collapse border-2 border-slate-900 text-[11px]">
@@ -145,22 +149,33 @@ const ObservationResultsView: React.FC<Props> = ({ settings, setSettings, record
           </tbody>
         </table>
 
-        <div className="mt-16 flex justify-between items-start text-xs font-bold uppercase tracking-tight px-4 text-center">
-          <div className="w-64">
-             <p className="mb-20 uppercase">
-                Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalPemb)}<br/>
-                Kepala {settings.namaSekolah}
-             </p>
-             <div>
-               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
-               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
-             </div>
-          </div>
-          <div className="w-64">
+        <div className="mt-16 grid grid-cols-3 gap-4 items-start text-xs font-bold uppercase tracking-tight px-4 text-center">
+          <div>
              <p className="mb-20 uppercase">Guru yang di Supervisi</p>
              <div>
                <p className="font-black underline text-sm uppercase">{selectedTeacher?.namaGuru || '....................'}</p>
                <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
+             </div>
+          </div>
+          <div>
+            {supervisorName !== settings.namaKepalaSekolah && (
+              <>
+                 <p className="mb-20 uppercase">Supervisor</p>
+                 <div>
+                   <p className="font-black underline text-sm uppercase">{supervisorName}</p>
+                   <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+                 </div>
+              </>
+            )}
+          </div>
+          <div>
+             <p className="mb-20 uppercase">
+                Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalPemb)}<br/>
+                Mengetahui, Kepala Sekolah
+             </p>
+             <div>
+               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
              </div>
           </div>
         </div>

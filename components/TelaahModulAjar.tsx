@@ -45,14 +45,10 @@ const TelaahModulAjar: React.FC<Props> = ({ settings, setSettings, records, inst
   const selectedTeacher = useMemo(() => records.find(t => t.id === selectedTeacherId), [selectedTeacherId, records]);
 
   const stats = useMemo(() => {
-    // Calculate strictly based on the items defined in MODUL_GROUPS
     const allItems = MODUL_GROUPS.flatMap(g => g.items);
     const totalItems = allItems.length;
     const maxScore = totalItems * 2; 
-    
-    // Sum scores only for the valid items
     const totalScore = allItems.reduce((sum, item) => sum + (scores[item.id] || 0), 0);
-    
     const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
     let kriteria = percentage >= 91 ? 'Sangat Baik' : percentage >= 81 ? 'Baik' : percentage >= 71 ? 'Cukup' : 'Kurang';
     return { totalScore, maxScore, percentage, kriteria };
@@ -96,7 +92,7 @@ const TelaahModulAjar: React.FC<Props> = ({ settings, setSettings, records, inst
 
   const exportWord = () => {
     const content = document.getElementById('modul-export-area')?.innerHTML;
-    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; font-size: 9pt; }</style></head><body>";
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; font-size: 10pt; }</style></head><body>";
     const footer = "</body></html>";
     const blob = new Blob([header + content + footer], { type: 'application/msword' });
     const link = document.createElement("a");
@@ -104,6 +100,10 @@ const TelaahModulAjar: React.FC<Props> = ({ settings, setSettings, records, inst
     link.download = `Telaah_Modul_${selectedTeacher?.namaGuru || 'Guru'}_${settings.semester}.doc`;
     link.click();
   };
+
+  // Lookup supervisor info
+  const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
   return (
     <div className="space-y-6 animate-fadeIn pb-20">
@@ -182,22 +182,33 @@ const TelaahModulAjar: React.FC<Props> = ({ settings, setSettings, records, inst
            </div>
         </div>
 
-        <div className="mt-12 flex justify-between items-start text-sm font-bold tracking-tight text-center px-4">
-            <div className="w-64">
-               <p className="leading-tight uppercase mb-20">
-                 Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
-                 Kepala {settings.namaSekolah}
-               </p>
-               <div>
-                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
-                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
-               </div>
-            </div>
-            <div className="w-64">
+        <div className="mt-12 grid grid-cols-3 gap-4 items-start text-sm font-bold tracking-tight text-center px-4">
+            <div>
                <p className="uppercase leading-tight mb-20">Guru yang di Supervisi</p>
                <div>
                  <p className="underline uppercase font-black">{selectedTeacher?.namaGuru || '....................'}</p>
                  <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
+               </div>
+            </div>
+            <div>
+              {supervisorName !== settings.namaKepalaSekolah && (
+                <>
+                   <p className="leading-tight uppercase mb-20">Supervisor</p>
+                   <div>
+                     <p className="underline uppercase font-black">{supervisorName}</p>
+                     <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {supervisorNIP}</p>
+                   </div>
+                </>
+              )}
+            </div>
+            <div>
+               <p className="leading-tight uppercase mb-20">
+                 Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
+                 Mengetahui, Kepala Sekolah
+               </p>
+               <div>
+                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
+                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
                </div>
             </div>
         </div>

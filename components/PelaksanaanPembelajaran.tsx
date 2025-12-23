@@ -17,7 +17,7 @@ const getAutoFeedback = (percentage: number) => {
   if (percentage >= 91) return { catatan: "Pelaksanaan pembelajaran sangat inspiratif, interaktif, dan berpusat pada peserta didik. Penggunaan waktu dan media sangat efektif.", tindakLanjut: "Jadikan model pembelajaran percontohan (best practice) bagi guru lain dan dokumentasikan dalam video praktik baik." };
   if (percentage >= 81) return { catatan: "Proses pembelajaran berjalan baik, tujuan tercapai, dan kelas kondusif. Langkah pembelajaran sudah runtut.", tindakLanjut: "Tingkatkan variasi metode dan penggunaan media pembelajaran yang lebih inovatif (berbasis digital)." };
   if (percentage >= 71) return { catatan: "Pembelajaran berjalan cukup baik, namun interaksi siswa perlu ditingkatkan. Beberapa siswa masih terlihat pasif.", tindakLanjut: "Fokus pada strategi pelibatan siswa aktif dalam kegiatan inti dan manajemen pengelolaan kelas." };
-  return { catatan: "Pembelajaran masih didominasi guru (teacher-centered) dan kurang variatif. Tujuan pembelajaran belum sepenuhnya tercapai.", tindakLanjut: "Perlu bimbingan teknis intensif mengenai manajemen kelas dan strategi pembelajaran aktif." };
+  return { catatan: "Pembelajaran masih didominasi guru (teacher-centered) and kurang variatif. Tujuan pembelajaran belum sepenuhnya tercapai.", tindakLanjut: "Perlu bimbingan teknis intensif mengenai manajemen kelas dan strategi pembelajaran aktif." };
 };
 
 const SECTIONS: Section[] = [
@@ -60,20 +60,15 @@ const PelaksanaanPembelajaran: React.FC<Props> = ({ settings, setSettings, recor
   const selectedTeacher = useMemo(() => records.find(t => t.id === selectedTeacherId), [selectedTeacherId, records]);
 
   const stats = useMemo(() => {
-    // Determine all active items from the structure to ensure accurate max score calculation
     const allItems = SECTIONS.flatMap(section => section.groups.flatMap(group => group.items));
     const totalItems = allItems.length;
-    const maxScore = totalItems * 2; // 0, 1, 2 (max 2)
-
-    // Calculate total score only for these valid items
+    const maxScore = totalItems * 2; 
     const totalScore = allItems.reduce((sum, item) => sum + (scores[item.id] || 0), 0);
-    
     const perc = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
     let kriteria = perc >= 91 ? 'Sangat Baik' : perc >= 81 ? 'Baik' : perc >= 71 ? 'Cukup' : 'Kurang';
     return { totalScore, perc, kriteria };
   }, [scores]);
 
-  // Auto-generate feedback when score changes
   useEffect(() => {
     if (Object.keys(scores).length > 0) {
       const feedback = getAutoFeedback(stats.perc);
@@ -106,7 +101,7 @@ const PelaksanaanPembelajaran: React.FC<Props> = ({ settings, setSettings, recor
 
   const exportWord = () => {
     const content = document.getElementById('pelaksanaan-export-area')?.innerHTML;
-    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; font-size: 9pt; }</style></head><body>";
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; font-size: 10pt; }</style></head><body>";
     const footer = "</body></html>";
     const blob = new Blob([header + content + footer], { type: 'application/msword' });
     const link = document.createElement("a");
@@ -114,6 +109,10 @@ const PelaksanaanPembelajaran: React.FC<Props> = ({ settings, setSettings, recor
     link.download = `Pelaksanaan_Pembelajaran_${selectedTeacher?.namaGuru || 'Guru'}_${settings.semester}.doc`;
     link.click();
   };
+
+  // Dynamic Supervisor info
+  const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
   return (
     <div className="space-y-6 animate-fadeIn pb-20">
@@ -211,22 +210,33 @@ const PelaksanaanPembelajaran: React.FC<Props> = ({ settings, setSettings, recor
            </div>
         </div>
 
-        <div className="mt-16 flex justify-between items-start text-xs font-bold uppercase tracking-tight px-4 text-center">
-          <div className="w-64">
-             <p className="mb-20 uppercase">
-                Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalPemb)}<br/>
-                Kepala {settings.namaSekolah}
-             </p>
-             <div>
-               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
-               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
-             </div>
-          </div>
-          <div className="w-64">
+        <div className="mt-16 grid grid-cols-3 gap-4 items-start text-xs font-bold uppercase tracking-tight text-center px-4">
+          <div>
              <p className="mb-20 uppercase">Guru yang di Supervisi</p>
              <div>
                <p className="font-black underline text-sm uppercase">{selectedTeacher?.namaGuru || '....................'}</p>
                <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
+             </div>
+          </div>
+          <div>
+            {supervisorName !== settings.namaKepalaSekolah && (
+              <>
+                <p className="mb-20 uppercase">Supervisor</p>
+                <div>
+                  <p className="font-black underline text-sm uppercase">{supervisorName}</p>
+                  <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+                </div>
+              </>
+            )}
+          </div>
+          <div>
+             <p className="mb-20 uppercase">
+                Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalPemb)}<br/>
+                Mengetahui, Kepala Sekolah
+             </p>
+             <div>
+               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
              </div>
           </div>
         </div>

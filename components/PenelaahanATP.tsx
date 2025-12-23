@@ -99,6 +99,10 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
     link.click();
   };
 
+  // Dynamic Supervisor info
+  const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
+
   return (
     <div className="space-y-6 animate-fadeIn pb-20">
       <div className="flex flex-col md:flex-row justify-between items-center no-print bg-white p-4 rounded-2xl shadow-sm border border-slate-100 gap-4">
@@ -181,22 +185,33 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
            </div>
         </div>
 
-        <div className="mt-12 flex justify-between items-start text-sm font-bold tracking-tight text-center px-4">
-            <div className="w-64">
-               <p className="leading-tight uppercase mb-20">
-                 Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
-                 Kepala {settings.namaSekolah}
-               </p>
-               <div>
-                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
-                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
-               </div>
-            </div>
-            <div className="w-64">
+        <div className="mt-12 grid grid-cols-3 gap-4 items-start text-sm font-bold tracking-tight text-center px-4">
+            <div>
                <p className="uppercase leading-tight mb-20">Guru yang di Supervisi</p>
                <div>
                  <p className="underline uppercase font-black">{selectedTeacher?.namaGuru || '....................'}</p>
                  <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
+               </div>
+            </div>
+            <div>
+              {supervisorName !== settings.namaKepalaSekolah && (
+                <>
+                   <p className="leading-tight uppercase mb-20">Supervisor</p>
+                   <div>
+                     <p className="underline uppercase font-black">{supervisorName}</p>
+                     <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {supervisorNIP}</p>
+                   </div>
+                </>
+              )}
+            </div>
+            <div>
+               <p className="leading-tight uppercase mb-20">
+                 Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
+                 Mengetahui, Kepala Sekolah
+               </p>
+               <div>
+                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
+                 <p className="text-[10px] font-mono tracking-tighter mt-1 uppercase">NIP. {settings.nipKepalaSekolah}</p>
                </div>
             </div>
         </div>

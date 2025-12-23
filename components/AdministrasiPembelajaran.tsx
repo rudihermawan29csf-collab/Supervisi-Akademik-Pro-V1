@@ -46,7 +46,6 @@ const AdministrasiPembelajaran: React.FC<Props> = ({ settings, setSettings, reco
     return { total, perc, pred };
   }, [scores]);
 
-  // Auto-generate feedback when score changes
   useEffect(() => {
     if (Object.keys(scores).length > 0) {
       const feedback = getAutoFeedback(stats.perc);
@@ -61,7 +60,6 @@ const AdministrasiPembelajaran: React.FC<Props> = ({ settings, setSettings, reco
       const saved = instrumentResults[key];
       if (saved) {
         setScores(saved.scores as any || {}); 
-        // Only set saved text if it exists, otherwise auto logic will take over on first render if scores exist
         if (saved.catatan) setCatatan(saved.catatan);
         if (saved.tindakLanjut) setTindakLanjut(saved.tindakLanjut);
       } else {
@@ -88,6 +86,10 @@ const AdministrasiPembelajaran: React.FC<Props> = ({ settings, setSettings, reco
     link.download = `Adm_Pembelajaran_${selectedTeacher?.namaGuru || 'Guru'}_${settings.semester}.doc`;
     link.click();
   };
+
+  // Lookup supervisor info
+  const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
   return (
     <div className="space-y-6 pb-20">
@@ -179,22 +181,33 @@ const AdministrasiPembelajaran: React.FC<Props> = ({ settings, setSettings, reco
            </div>
         </div>
 
-        <div className="mt-16 flex justify-between items-start text-xs font-bold uppercase tracking-tight px-4 text-center">
-          <div className="text-center w-64">
-             <p className="mb-20 uppercase">
-                Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
-                Kepala {settings.namaSekolah}
-             </p>
-             <div>
-               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
-               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
-             </div>
-          </div>
-          <div className="text-center w-64">
+        <div className="mt-16 grid grid-cols-3 gap-4 items-start text-xs font-bold uppercase tracking-tight text-center px-4">
+          <div>
              <p className="mb-20 uppercase">Guru yang di Supervisi</p>
              <div>
                <p className="font-black underline text-sm uppercase">{selectedTeacher?.namaGuru || '....................'}</p>
                <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {selectedTeacher?.nip || '....................'}</p>
+             </div>
+          </div>
+          <div>
+            {supervisorName !== settings.namaKepalaSekolah && (
+              <>
+                <p className="mb-20 uppercase">Supervisor</p>
+                <div>
+                  <p className="font-black underline text-sm uppercase">{supervisorName}</p>
+                  <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+                </div>
+              </>
+            )}
+          </div>
+          <div>
+             <p className="mb-20 uppercase">
+                Mojokerto, {formatIndonesianDate(selectedTeacher?.tanggalAdm)}<br/>
+                Mengetahui, Kepala Sekolah
+             </p>
+             <div>
+               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
              </div>
           </div>
         </div>

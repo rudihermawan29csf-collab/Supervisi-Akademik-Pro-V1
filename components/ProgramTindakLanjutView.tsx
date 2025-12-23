@@ -77,9 +77,9 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
         // Correct Max Scores based on Instrument Components
         const sAdm = getScore('administrasi', 26);
         const sATP = getScore('atp', 24);
-        const sModul = getScore('modul', 34); // Updated from 48 to 34 (17 items * 2)
-        const sPBM = getScore('pembelajaran', 46); // Updated to 46 (23 items * 2)
-        const sPenilaian = getScore('penilaian', 48); // 12 items * 4
+        const sModul = getScore('modul', 34); 
+        const sPBM = getScore('pembelajaran', 46); 
+        const sPenilaian = getScore('penilaian', 48); 
 
         const avg = Math.round((sAdm + sATP + sModul + sPBM + sPenilaian) / 5);
         const pred = getPredikat(avg, settings.scoreSettings);
@@ -132,7 +132,7 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
     <div className="animate-fadeIn space-y-6 pb-20">
       <div className="flex justify-between items-center no-print">
         <div>
-          <h2 className="text-xl font-black uppercase tracking-tight">Program Tindak Lanjut Supervisi</h2>
+          <h2 className="text-xl font-black uppercase tracking-tight text-slate-800">Program Tindak Lanjut Supervisi</h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rencana Strategis Pasca Evaluasi</p>
         </div>
         <div className="flex gap-2">
@@ -182,7 +182,6 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
           </tbody>
         </table>
 
-        {/* Detailed Analysis Footer */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-t-4 border-slate-900 pt-6 break-inside-avoid">
            <div className="space-y-4">
               <div>
@@ -216,16 +215,14 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
              </div>
            </div>
            
-           <div className="grid grid-cols-2 text-[11px] font-bold text-center">
-              <div>
-                 <p className="mb-16">Mengetahui,<br/>Kepala Sekolah</p>
+           <div className="flex justify-end text-[11px] font-bold text-center">
+              <div className="w-64">
+                 <p className="mb-16">
+                    Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
+                    Kepala Sekolah
+                 </p>
                  <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
                  <p className="text-[9px] font-mono">NIP. {settings.nipKepalaSekolah}</p>
-              </div>
-              <div>
-                 <p className="mb-16">Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>Supervisor</p>
-                 <p className="underline uppercase font-black">......................................</p>
-                 <p className="text-[9px] font-mono">NIP. ......................................</p>
               </div>
            </div>
         </div>
