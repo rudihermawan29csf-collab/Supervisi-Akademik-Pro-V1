@@ -38,7 +38,7 @@ const App: React.FC = () => {
   const [lastSyncStatus, setLastSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    jadwal: true, instrumen: true, instrumenTendik: true, laporanRekap: true, laporanNonGuru: true
+    jadwal: true, instrumen: true, instrumenTendik: false, laporanRekap: true, laporanNonGuru: false
   });
 
   const [selectedRecord, setSelectedRecord] = useState<TeacherRecord | null>(null);
@@ -230,8 +230,25 @@ const App: React.FC = () => {
             )}
           </div>
 
+          {/* INSTRUMEN TENDIK & EKSTRA - KEMBALI DI SIDEBAR */}
           <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 overflow-hidden pb-1">
-            <SectionHeader id="laporanRekap" label="3. Hasil & Rekap" color="text-rose-400" />
+            <SectionHeader id="instrumenTendik" label="3. Instrumen Tendik & Ekstra" color="text-purple-400" />
+            {openSections.instrumenTendik && (
+              <div className="px-1 space-y-0.5">
+                <NavItem view="tendik-sekolah" label="Adm. Sekolah" activeColor="bg-purple-600" />
+                <NavItem view="tendik-ketenagaan" label="Adm. Ketenagaan" activeColor="bg-purple-600" />
+                <NavItem view="tendik-perlengkapan" label="Adm. Perlengkapan" activeColor="bg-purple-600" />
+                <NavItem view="tendik-perpustakaan" label="Adm. Perpustakaan" activeColor="bg-purple-600" />
+                <NavItem view="tendik-lab-ipa" label="Lab. IPA" activeColor="bg-purple-600" />
+                <NavItem view="tendik-lab-komputer" label="Lab. Komputer" activeColor="bg-purple-600" />
+                <NavItem view="tendik-kesiswaan" label="Adm. Kesiswaan" activeColor="bg-purple-600" />
+                <NavItem view="inst-ekstra" label="Kegiatan Ekstrakurikuler" activeColor="bg-rose-600" />
+              </div>
+            )}
+          </div>
+
+          <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 overflow-hidden pb-1">
+            <SectionHeader id="laporanRekap" label="4. Hasil & Rekap Guru" color="text-rose-400" />
             {openSections.laporanRekap && (
               <div className="px-1 space-y-0.5">
                 <NavItem view="lap-analisis-pbm" label="Analisis Hasil PBM" />
@@ -239,6 +256,17 @@ const App: React.FC = () => {
                 <NavItem view="lap-rekap-akademik" label="Rekap Akademik" />
                 <NavItem view="lap-ptl-akademik" label="Program Tindak Lanjut" />
                 <NavItem view="lap-action-akademik" label="Tindak Lanjut Action" />
+              </div>
+            )}
+          </div>
+
+          {/* HASIL TENDIK & EKSTRA - KEMBALI DI SIDEBAR */}
+          <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 overflow-hidden pb-1">
+            <SectionHeader id="laporanNonGuru" label="5. Laporan Non-Guru" color="text-amber-400" />
+            {openSections.laporanNonGuru && (
+              <div className="px-1 space-y-0.5">
+                <NavItem view="ptl-tendik" label="Hasil Supervisi Tendik" activeColor="bg-purple-700" />
+                <NavItem view="ptl-extra" label="Hasil Supervisi Ekstra" activeColor="bg-rose-700" />
               </div>
             )}
           </div>
