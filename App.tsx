@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { INITIAL_TEACHERS, DATA_PTT } from './constants';
 import { TeacherRecord, ViewType, AppSettings, SupervisionStatus, InstrumentResult, ExtraRecord, AdminRecord } from './types';
@@ -139,11 +138,15 @@ const App: React.FC = () => {
     const newRecords = records.map(r => {
       if (r.id === teacherId) {
         // Fungsi pembantu untuk mengambil skor dari hasil instrumen
-        const getVal = (t: string, max: number) => {
+        // Fix: Explicitly typed return as number and used a more robust reduce logic to avoid arithmetic type mismatch errors
+        const getVal = (t: string, max: number): number => {
           const res = newResults[`${teacherId}-${t}-${semester}`];
           if (!res || !res.scores) return 0;
-          // Fix: Explicitly type accumulator 'a' as number and cast current value 'b' to number to prevent arithmetic type mismatch errors
-          const sum = Object.values(res.scores).filter(v => typeof v === 'number').reduce((a: number, b: any) => a + (b as number), 0);
+          const scoreValues = Object.values(res.scores);
+          const sum: number = scoreValues.reduce((acc: number, val: any) => {
+            const v = typeof val === 'number' ? val : 0;
+            return acc + v;
+          }, 0);
           return Math.round((sum / max) * 100);
         };
 

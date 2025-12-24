@@ -1,21 +1,22 @@
 
 /**
- * GANTI URL DI BAWAH INI dengan URL Web App yang Anda dapatkan dari Google Apps Script.
+ * URL Web App dari Google Apps Script.
+ * Pastikan Anda telah melakukan "Deploy" -> "New Deployment" -> "Web App" 
+ * Execute as: Me
+ * Who has access: Anyone
  */
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAEuReOW1hRU1d_vrVDpQ8HSW1mIPzRXfG9iDj_4BbhKPFi46tk6y8Wtx5vtrNB_7O/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydktnDZkI9XPIpZzosxVPYL7fklApYFHeo1h-rlJzXmENpL4OAAAb0-EG-KLt79CYZ/exec";
 
 export const syncDataToCloud = async (allData: any) => {
   try {
-    // Mode no-cors digunakan untuk menghindari blokir CORS browser saat POST ke Google Script
-    await fetch(APPS_SCRIPT_URL, {
+    // Kita kirim sebagai text/plain untuk menghindari Pre-flight CORS yang sering gagal di GAS
+    const response = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(allData),
     });
-    return true;
+    
+    // Meskipun GAS sering redirect, kita cek statusnya
+    return response.ok;
   } catch (error) {
     console.error("Cloud Sync Error (Save):", error);
     return false;
@@ -24,8 +25,10 @@ export const syncDataToCloud = async (allData: any) => {
 
 export const fetchDataFromCloud = async () => {
   try {
-    const response = await fetch(APPS_SCRIPT_URL);
-    if (!response.ok) throw new Error("Network response was not ok");
+    // Tambahkan timestamp agar tidak terkena cache browser (cache busting)
+    const response = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`);
+    if (!response.ok) throw new Error("Gagal mengambil data dari server.");
+    
     const data = await response.json();
     return data;
   } catch (error) {
