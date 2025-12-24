@@ -184,7 +184,8 @@ const PenelaahanATP: React.FC<Props> = ({ settings, setSettings, records, instru
            </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-3 gap-4 text-sm font-bold tracking-tight text-center px-4">
+        {/* Tanda Tangan: 3 Kolom (Principal, Supervisor, Teacher) */}
+        <div className="mt-12 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight text-center px-4 break-inside-avoid">
             <div className="flex flex-col justify-between h-36">
                <p className="leading-tight uppercase">
                  Mengetahui,<br/>

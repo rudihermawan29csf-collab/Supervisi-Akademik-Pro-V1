@@ -148,7 +148,8 @@ const ObservationResultsView: React.FC<Props> = ({ settings, setSettings, record
           </tbody>
         </table>
 
-        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight px-4 text-center">
+        {/* Tanda Tangan: 3 Kolom (Principal, Supervisor, Teacher) */}
+        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight px-4 text-center break-inside-avoid">
           <div className="flex flex-col justify-between h-32">
              <p className="uppercase">
                 Mengetahui,<br/>

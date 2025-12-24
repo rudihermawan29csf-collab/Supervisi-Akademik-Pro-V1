@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { TeacherRecord, AppSettings, InstrumentResult } from '../types';
 
@@ -47,6 +46,7 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
   const [kelemahan, setKelemahan] = useState('');
   const [rekomendasi, setRekomendasi] = useState('');
 
+  // Fix: Load existing analysis from instrumentResults state
   useEffect(() => {
     const saved = instrumentResults[analysisKey];
     if (saved) {
@@ -64,13 +64,12 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
     return records
       .filter(r => r.semester === activeSemester)
       .map(r => {
-        // Logika hitung skor identik dengan PTL
         const getScore = (type: string, maxScore: number): number => {
           const key = `${r.id}-${type}-${activeSemester}`;
           const res = instrumentResults[key];
           if (!res || !res.scores) return 0;
           const vals = Object.values(res.scores).filter(v => typeof v === 'number') as number[];
-          const sum = vals.reduce((a, b) => a + b, 0);
+          const sum = vals.reduce((a: number, b: number) => a + b, 0);
           return maxScore > 0 ? Math.round((sum / maxScore) * 100) : 0;
         };
 
@@ -134,6 +133,20 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
     alert('Analisis berhasil diperbarui berdasarkan data instrumen terbaru.');
   };
 
+  // Fix: Handle manual save of the global analysis fields
+  const handleSave = () => {
+    if (onSave) {
+      onSave(0, 'recap-analysis', activeSemester, {
+        scores: {},
+        remarks: {},
+        catatan: kekuatan,
+        kesanUmum: kelemahan,
+        tindakLanjut: rekomendasi
+      });
+      alert('Analisis rekapitulasi berhasil disimpan!');
+    }
+  };
+
   const exportPDF = () => {
     const element = document.getElementById('recap-export-area');
     // @ts-ignore
@@ -151,14 +164,11 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
     link.click();
   };
 
-  const supervisorName = settings.supervisors[0] || settings.namaKepalaSekolah;
-  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
-
   return (
     <div className="animate-fadeIn space-y-6 pb-20">
       <div className="flex justify-between items-center no-print">
         <div>
-          <h2 className="text-xl font-black uppercase tracking-tight">Rekapitulasi Supervisi Akademik</h2>
+          <h2 className="text-xl font-black uppercase tracking-tight text-slate-800">Rekapitulasi Supervisi Akademik</h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Konsolidasi Seluruh Instrumen Penilaian</p>
         </div>
         <div className="flex gap-2">
@@ -168,8 +178,9 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
            </div>
            <button onClick={handleRefresh} className="px-4 py-2 bg-cyan-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg ml-2 flex items-center gap-2 hover:bg-cyan-700 transition-all">
              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-             Refresh Data
+             Refresh
            </button>
+           <button onClick={handleSave} className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg ml-2">Simpan</button>
            <button onClick={exportPDF} className="px-4 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg ml-2">PDF</button>
            <button onClick={exportWord} className="px-4 py-2 bg-blue-800 text-white rounded-xl font-black text-[10px] uppercase shadow-lg ml-2">Word</button>
         </div>
@@ -193,62 +204,61 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
                 <th className="border border-slate-800 p-2">Telaah ATP</th>
                 <th className="border border-slate-800 p-2">Telaah MA</th>
                 <th className="border border-slate-800 p-2">Pelaks. Pemb</th>
-                <th className="border border-slate-800 p-2">Penil. Pemb</th>
-                <th className="border border-slate-800 p-2 bg-rose-800 text-white font-black">Nilai</th>
-                <th className="border border-slate-800 p-2 text-left w-1/4">Catatan Pelaksanaan</th>
+                <th className="border border-slate-800 p-2">Penilaian Pemb</th>
+                <th className="border border-slate-800 p-2">Rata-rata (%)</th>
+                <th className="border border-slate-800 p-2 text-left">Catatan / Analisis</th>
               </tr>
             </thead>
             <tbody>
-              {recapData.length > 0 ? recapData.map((d) => (
-                <tr key={d.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="border border-slate-800 p-2 font-black uppercase text-slate-800 leading-tight">{toTitleCase(d.namaGuru)}</td>
+              {recapData.map((d) => (
+                <tr key={d.id} className="hover:bg-slate-50 transition-colors align-top">
+                  <td className="border border-slate-800 p-2 font-black uppercase text-slate-800">{toTitleCase(d.namaGuru)}</td>
                   <td className="border border-slate-800 p-2 italic text-blue-800">{d.mataPelajaran}</td>
-                  <td className="border border-slate-800 p-2 text-center font-black">{d.kelas || '-'}</td>
-                  <td className="border border-slate-800 p-2 text-center font-bold text-slate-600">{d.scoreAdm || 0}</td>
-                  <td className="border border-slate-800 p-2 text-center font-bold text-slate-600">{d.scoreATP || 0}</td>
-                  <td className="border border-slate-800 p-2 text-center font-bold text-slate-600">{d.scoreModul || 0}</td>
-                  <td className="border border-slate-800 p-2 text-center font-bold text-slate-600">{d.scorePBM || 0}</td>
-                  <td className="border border-slate-800 p-2 text-center font-bold text-slate-600">{d.scorePenilaian || 0}</td>
-                  <td className="border border-slate-800 p-2 text-center font-black text-rose-700 bg-rose-50/20 text-sm">{d.nilaiAkhir}</td>
-                  <td className="border border-slate-800 p-2 italic leading-snug text-slate-600">{d.catatanRecap}</td>
+                  <td className="border border-slate-800 p-2 text-center font-bold">{d.kelas || '-'}</td>
+                  <td className="border border-slate-800 p-2 text-center">{d.scoreAdm}%</td>
+                  <td className="border border-slate-800 p-2 text-center">{d.scoreATP}%</td>
+                  <td className="border border-slate-800 p-2 text-center">{d.scoreModul}%</td>
+                  <td className="border border-slate-800 p-2 text-center">{d.scorePBM}%</td>
+                  <td className="border border-slate-800 p-2 text-center">{d.scorePenilaian}%</td>
+                  <td className="border border-slate-800 p-2 text-center font-black text-blue-700 bg-blue-50/20">{d.nilaiAkhir}%</td>
+                  <td className="border border-slate-800 p-2 italic text-slate-600 leading-snug">{d.catatanRecap}</td>
                 </tr>
-              )) : (
-                <tr><td colSpan={10} className="py-10 text-center italic text-slate-400">Data rekapitulasi belum tersedia.</td></tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-t-4 border-slate-900 pt-6 break-inside-avoid">
            <div className="space-y-4">
-              <div className="flex flex-col h-full justify-between h-32">
-                 <p className="uppercase">
-                    Mengetahui,<br/>
-                    Kepala Sekolah
-                 </p>
-                 <div>
-                   <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
-                   <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
-                 </div>
-              </div>
-           </div>
-           <div className="flex flex-col h-full justify-between h-32 text-center">
-              <p className="uppercase">Supervisor</p>
               <div>
-                <p className="font-black underline text-sm uppercase">{supervisorName}</p>
-                <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+                 <h3 className="text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 inline-block">1. Analisis Kekuatan (Strengths)</h3>
+                 <textarea value={kekuatan} onChange={e => setKekuatan(e.target.value)} className="w-full mt-2 p-2 border-2 border-slate-200 rounded-xl text-[10px] h-24 outline-none focus:border-blue-500 no-print" placeholder="Tulis analisis kekuatan..." />
+                 <div className="hidden print:block mt-2 text-[10px] leading-relaxed text-slate-700 border border-slate-200 p-2 min-h-[60px] whitespace-pre-wrap">{kekuatan || '................................'}</div>
               </div>
-           </div>
-           <div className="flex flex-col h-full justify-between h-32 text-center">
-              <p className="uppercase">
-                 Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
-                 Ketua Tim Pengembang
-              </p>
               <div>
-                <p className="font-black underline text-sm uppercase">................................................</p>
-                <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. ................................................</p>
+                 <h3 className="text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 inline-block">2. Analisis Kelemahan (Weaknesses)</h3>
+                 <textarea value={kelemahan} onChange={e => setKelemahan(e.target.value)} className="w-full mt-2 p-2 border-2 border-slate-200 rounded-xl text-[10px] h-24 outline-none focus:border-blue-500 no-print" placeholder="Tulis analisis kelemahan..." />
+                 <div className="hidden print:block mt-2 text-[10px] leading-relaxed text-slate-700 border border-slate-200 p-2 min-h-[60px] whitespace-pre-wrap">{kelemahan || '................................'}</div>
               </div>
            </div>
+           <div className="space-y-4">
+              <div className="bg-blue-50 p-4 border-2 border-blue-200 rounded-xl h-full">
+                 <h3 className="text-xs font-black uppercase text-blue-900 mb-2">3. Rekomendasi & Tindak Lanjut</h3>
+                 <textarea value={rekomendasi} onChange={e => setRekomendasi(e.target.value)} className="w-full bg-white p-2 border border-blue-200 rounded-lg text-[10px] h-48 outline-none focus:ring-2 focus:ring-blue-300 no-print" placeholder="Tulis rekomendasi..." />
+                 <div className="hidden print:block text-[10px] leading-relaxed text-blue-800 whitespace-pre-wrap">{rekomendasi || '................................'}</div>
+              </div>
+           </div>
+        </div>
+
+        <div className="mt-12 flex justify-end items-start text-xs font-bold uppercase tracking-tight px-4 text-center">
+          <div className="text-center w-64">
+             <p className="mb-20 uppercase">
+                Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
+                Kepala {settings.namaSekolah}
+             </p>
+             <p className="font-black underline">{settings.namaKepalaSekolah}</p>
+             <p className="text-[10px] font-mono tracking-tighter">NIP. {settings.nipKepalaSekolah}</p>
+          </div>
         </div>
       </div>
     </div>

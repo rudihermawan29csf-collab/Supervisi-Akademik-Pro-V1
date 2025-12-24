@@ -65,7 +65,6 @@ const PostObservationView: React.FC<Props> = ({ settings, setSettings, records, 
     link.click();
   };
 
-  // Fix: Corrected property name from pewawancancara to pewawancara
   const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
   const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
@@ -133,7 +132,8 @@ const PostObservationView: React.FC<Props> = ({ settings, setSettings, records, 
            </div>
         </div>
 
-        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight px-4 text-center">
+        {/* Tanda Tangan: 3 Kolom (Principal, Supervisor, Teacher) */}
+        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight px-4 text-center break-inside-avoid">
           <div className="flex flex-col justify-between h-32">
              <p className="uppercase">
                 Mengetahui,<br/>

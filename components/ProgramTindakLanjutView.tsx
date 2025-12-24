@@ -125,9 +125,6 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
     html2pdf().from(element).save(`Program_Tindak_Lanjut_Guru_${activeSemester}.pdf`);
   };
 
-  const supervisorName = settings.supervisors[0] || settings.namaKepalaSekolah;
-  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
-
   return (
     <div className="animate-fadeIn space-y-6 pb-20">
       <div className="flex justify-between items-center no-print">
@@ -204,33 +201,14 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
            </div>
         </div>
 
-        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight text-center px-4">
-          <div className="flex flex-col justify-between h-32">
-             <p className="uppercase">
-                Mengetahui,<br/>
-                Kepala Sekolah
-             </p>
-             <div>
-               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
-               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
-             </div>
-          </div>
-          <div className="flex flex-col justify-between h-32">
-            <p className="uppercase">Supervisor</p>
-            <div>
-              <p className="font-black underline text-sm uppercase">{supervisorName}</p>
-              <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
-            </div>
-          </div>
-          <div className="flex flex-col justify-between h-32">
-             <p className="uppercase">
+        <div className="mt-12 flex justify-end items-start text-xs font-bold uppercase tracking-tight px-4 text-center">
+          <div className="text-center w-64">
+             <p className="mb-20 uppercase">
                 Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
-                Waka Kurikulum
+                Kepala {settings.namaSekolah}
              </p>
-             <div>
-               <p className="font-black underline text-sm uppercase">................................................</p>
-               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. ................................................</p>
-             </div>
+             <p className="font-black underline">{settings.namaKepalaSekolah}</p>
+             <p className="text-[10px] font-mono tracking-tighter">NIP. {settings.nipKepalaSekolah}</p>
           </div>
         </div>
       </div>
