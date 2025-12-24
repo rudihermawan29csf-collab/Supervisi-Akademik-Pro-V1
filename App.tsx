@@ -134,12 +134,41 @@ const App: React.FC = () => {
   const handleSaveInstrument = (teacherId: number, type: string, semester: string, data: InstrumentResult) => {
     const key = `${teacherId}-${type}-${semester}`;
     const newResults = { ...instrumentResults, [key]: data };
-    setInstrumentResults(newResults);
     
+    // Hitung ulang nilai komposit untuk record guru agar tersinkronisasi
     const newRecords = records.map(r => {
-      if (r.id === teacherId) return { ...r, status: SupervisionStatus.COMPLETED };
+      if (r.id === teacherId) {
+        // Fungsi pembantu untuk mengambil skor dari hasil instrumen
+        const getVal = (t: string, max: number) => {
+          const res = newResults[`${teacherId}-${t}-${semester}`];
+          if (!res || !res.scores) return 0;
+          // Fix: Explicitly type accumulator 'a' as number and cast current value 'b' to number to prevent arithmetic type mismatch errors
+          const sum = Object.values(res.scores).filter(v => typeof v === 'number').reduce((a: number, b: any) => a + (b as number), 0);
+          return Math.round((sum / max) * 100);
+        };
+
+        const sAdm = getVal('administrasi', 26);
+        const sATP = getVal('atp', 24);
+        const sModul = getVal('modul', 34);
+        const sPBM = getVal('pembelajaran', 46);
+        const sPenilaian = getVal('penilaian', 48);
+
+        const avg = Math.round((sAdm + sATP + sModul + sPBM + sPenilaian) / 5);
+
+        return { 
+          ...r, 
+          status: SupervisionStatus.COMPLETED,
+          nilai: avg, // Link utama nilai ada di sini
+          nilaiAdm: sAdm,
+          nilaiATP: sATP,
+          nilaiModul: sModul,
+          nilaiPenilaian: sPenilaian
+        };
+      }
       return r;
     });
+
+    setInstrumentResults(newResults);
     setRecords(newRecords);
     triggerCloudSync({ instrumentResults: newResults, records: newRecords });
   };
@@ -182,7 +211,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-100 flex overflow-hidden">
       {/* SIDEBAR */}
-      <aside className={`fixed inset-y-0 left-0 z-50 bg-slate-900 text-white transition-all duration-300 transform lg:relative ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:w-0'} flex flex-col overflow-hidden`}>
+      <aside className={ `fixed inset-y-0 left-0 z-50 bg-slate-900 text-white transition-all duration-300 transform lg:relative ${isSidebarOpen ? 'w-72 translate-x-0' : 'w-0 -translate-x-full lg:w-0'} flex flex-col overflow-hidden`}>
         <div className="p-5 border-b border-slate-800 bg-slate-950/50 relative flex items-center gap-4">
            <img src="https://i.ibb.co.com/c9Y905N/Logo-SMPN-3-PACET.png" alt="Logo" className="w-10 h-10 object-contain shadow-lg rounded-full bg-white p-0.5" />
            <div className="flex-1 min-w-0">
@@ -230,7 +259,6 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* INSTRUMEN TENDIK & EKSTRA - KEMBALI DI SIDEBAR */}
           <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 overflow-hidden pb-1">
             <SectionHeader id="instrumenTendik" label="3. Instrumen Tendik & Ekstra" color="text-purple-400" />
             {openSections.instrumenTendik && (
@@ -260,7 +288,6 @@ const App: React.FC = () => {
             )}
           </div>
 
-          {/* HASIL TENDIK & EKSTRA - KEMBALI DI SIDEBAR */}
           <div className="bg-slate-800/40 rounded-2xl border border-slate-700/50 overflow-hidden pb-1">
             <SectionHeader id="laporanNonGuru" label="5. Laporan Non-Guru" color="text-amber-400" />
             {openSections.laporanNonGuru && (

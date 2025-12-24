@@ -64,6 +64,7 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
     return records
       .filter(r => r.semester === activeSemester)
       .map(r => {
+        // Logika hitung skor identik dengan PTL
         const getScore = (type: string, maxScore: number): number => {
           const key = `${r.id}-${type}-${activeSemester}`;
           const res = instrumentResults[key];
@@ -79,8 +80,7 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
         const sPBM = getScore('pembelajaran', 46);
         const sPenilaian = getScore('penilaian', 48);
 
-        const scoresArr = [sAdm, sATP, sModul, sPBM, sPenilaian];
-        const avg = Math.round(scoresArr.reduce((a, b) => a + b, 0) / 5);
+        const avg = Math.round((sAdm + sATP + sModul + sPBM + sPenilaian) / 5);
 
         return {
           ...r,
@@ -221,54 +221,34 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-t-4 border-slate-900 pt-6 break-inside-avoid">
            <div className="space-y-4">
-              <div>
-                 <h3 className="text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 inline-block">1. Analisis Kekuatan (Strengths)</h3>
-                 <textarea value={kekuatan} onChange={e => setKekuatan(e.target.value)} className="w-full mt-2 p-2 border-2 border-slate-200 rounded-xl text-[10px] h-24 outline-none focus:border-blue-500 no-print" placeholder="Tulis analisis kekuatan..." />
-                 <div className="hidden print:block mt-2 text-[10px] leading-relaxed text-slate-700 border border-slate-200 p-2 min-h-[60px] whitespace-pre-wrap">{kekuatan || '................................'}</div>
-              </div>
-              <div>
-                 <h3 className="text-xs font-black uppercase bg-slate-900 text-white px-3 py-1 inline-block">2. Analisis Kelemahan (Weaknesses)</h3>
-                 <textarea value={kelemahan} onChange={e => setKelemahan(e.target.value)} className="w-full mt-2 p-2 border-2 border-slate-200 rounded-xl text-[10px] h-24 outline-none focus:border-blue-500 no-print" placeholder="Tulis analisis kelemahan..." />
-                 <div className="hidden print:block mt-2 text-[10px] leading-relaxed text-slate-700 border border-slate-200 p-2 min-h-[60px] whitespace-pre-wrap">{kelemahan || '................................'}</div>
-              </div>
-           </div>
-           <div className="space-y-4">
-              <div className="bg-blue-50 p-4 border-2 border-blue-200 rounded-xl h-full">
-                 <h3 className="text-xs font-black uppercase text-blue-900 mb-2">3. Rekomendasi & Tindak Lanjut</h3>
-                 <textarea value={rekomendasi} onChange={e => setRekomendasi(e.target.value)} className="w-full bg-white p-2 border border-blue-200 rounded-lg text-[10px] h-48 outline-none focus:ring-2 focus:ring-blue-300 no-print" placeholder="Tulis rekomendasi..." />
-                 <div className="hidden print:block text-[10px] leading-relaxed text-blue-800 whitespace-pre-wrap">{rekomendasi || '................................'}</div>
+              <div className="flex flex-col h-full justify-between h-32">
+                 <p className="uppercase">
+                    Mengetahui,<br/>
+                    Kepala Sekolah
+                 </p>
+                 <div>
+                   <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
+                   <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
+                 </div>
               </div>
            </div>
-        </div>
-
-        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight text-center px-4">
-          <div className="flex flex-col justify-between h-32">
-             <p className="uppercase">
-                Mengetahui,<br/>
-                Kepala Sekolah
-             </p>
-             <div>
-               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
-               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
-             </div>
-          </div>
-          <div className="flex flex-col justify-between h-32">
-            <p className="uppercase">Supervisor</p>
-            <div>
-              <p className="font-black underline text-sm uppercase">{supervisorName}</p>
-              <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
-            </div>
-          </div>
-          <div className="flex flex-col justify-between h-32">
-             <p className="uppercase">
-                Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
-                Ketua Tim Pengembang
-             </p>
-             <div>
-               <p className="font-black underline text-sm uppercase">................................................</p>
-               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. ................................................</p>
-             </div>
-          </div>
+           <div className="flex flex-col h-full justify-between h-32 text-center">
+              <p className="uppercase">Supervisor</p>
+              <div>
+                <p className="font-black underline text-sm uppercase">{supervisorName}</p>
+                <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+              </div>
+           </div>
+           <div className="flex flex-col h-full justify-between h-32 text-center">
+              <p className="uppercase">
+                 Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
+                 Ketua Tim Pengembang
+              </p>
+              <div>
+                <p className="font-black underline text-sm uppercase">................................................</p>
+                <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. ................................................</p>
+              </div>
+           </div>
         </div>
       </div>
     </div>
