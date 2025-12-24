@@ -64,7 +64,6 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
     return records
       .filter(r => r.semester === activeSemester)
       .map((r, i) => {
-        // Calculate scores directly from instrument results for 100% accuracy
         const getScore = (type: string, maxScore: number): number => {
           const key = `${r.id}-${type}-${activeSemester}`;
           const res = instrumentResults[key];
@@ -74,7 +73,6 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
           return maxScore > 0 ? Math.round((sum / maxScore) * 100) : 0;
         };
 
-        // Correct Max Scores based on Instrument Components
         const sAdm = getScore('administrasi', 26);
         const sATP = getScore('atp', 24);
         const sModul = getScore('modul', 34); 
@@ -110,7 +108,6 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
     }
   };
 
-  // Auto-fill logic
   useEffect(() => {
     if (!kekuatan && !kelemahan && !rekomendasi && data.length > 0) {
       generateAnalysis();
@@ -127,6 +124,9 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
     // @ts-ignore
     html2pdf().from(element).save(`Program_Tindak_Lanjut_Guru_${activeSemester}.pdf`);
   };
+
+  const supervisorName = settings.supervisors[0] || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
   return (
     <div className="animate-fadeIn space-y-6 pb-20">
@@ -204,27 +204,34 @@ const ProgramTindakLanjutView: React.FC<Props> = ({ settings, records, instrumen
            </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-10 break-inside-avoid">
-           <div className="p-4 border-2 border-slate-800 bg-slate-50">
-             <h4 className="text-[10px] font-black uppercase mb-2 border-b-2 border-slate-800 pb-1">KRITERIA PREDIKAT (Dinamis)</h4>
-             <div className="space-y-1 text-[10px] font-bold">
-               <div className="flex justify-between text-emerald-700"><span>PREDIKAT A (SANGAT BAIK)</span><span>≥ {settings.scoreSettings.excellent}%</span></div>
-               <div className="flex justify-between text-blue-700"><span>PREDIKAT B (BAIK)</span><span>≥ {settings.scoreSettings.good}%</span></div>
-               <div className="flex justify-between text-amber-700"><span>PREDIKAT C (CUKUP)</span><span>≥ {settings.scoreSettings.fair}%</span></div>
-               <div className="flex justify-between text-red-700"><span>PREDIKAT D (KURANG)</span><span>&lt; {settings.scoreSettings.fair}%</span></div>
+        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight text-center px-4">
+          <div className="flex flex-col justify-between h-32">
+             <p className="uppercase">
+                Mengetahui,<br/>
+                Kepala Sekolah
+             </p>
+             <div>
+               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
              </div>
-           </div>
-           
-           <div className="flex justify-end text-[11px] font-bold text-center">
-              <div className="w-64">
-                 <p className="mb-16">
-                    Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
-                    Kepala Sekolah
-                 </p>
-                 <p className="underline uppercase font-black">{settings.namaKepalaSekolah}</p>
-                 <p className="text-[9px] font-mono">NIP. {settings.nipKepalaSekolah}</p>
-              </div>
-           </div>
+          </div>
+          <div className="flex flex-col justify-between h-32">
+            <p className="uppercase">Supervisor</p>
+            <div>
+              <p className="font-black underline text-sm uppercase">{supervisorName}</p>
+              <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+            </div>
+          </div>
+          <div className="flex flex-col justify-between h-32">
+             <p className="uppercase">
+                Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
+                Waka Kurikulum
+             </p>
+             <div>
+               <p className="font-black underline text-sm uppercase">................................................</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. ................................................</p>
+             </div>
+          </div>
         </div>
       </div>
     </div>

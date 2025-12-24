@@ -64,7 +64,6 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
     return records
       .filter(r => r.semester === activeSemester)
       .map(r => {
-        // Calculate scores directly from instrument results for 100% accuracy
         const getScore = (type: string, maxScore: number): number => {
           const key = `${r.id}-${type}-${activeSemester}`;
           const res = instrumentResults[key];
@@ -74,16 +73,14 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
           return maxScore > 0 ? Math.round((sum / maxScore) * 100) : 0;
         };
 
-        // Max Scores based on Instrument Components:
-        // Adm: 26, ATP: 24, Modul: 34, PBM (Pembelajaran): 46, Penilaian: 48
         const sAdm = getScore('administrasi', 26);
         const sATP = getScore('atp', 24);
         const sModul = getScore('modul', 34);
         const sPBM = getScore('pembelajaran', 46);
         const sPenilaian = getScore('penilaian', 48);
 
-        const scores = [sAdm, sATP, sModul, sPBM, sPenilaian];
-        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / 5);
+        const scoresArr = [sAdm, sATP, sModul, sPBM, sPenilaian];
+        const avg = Math.round(scoresArr.reduce((a, b) => a + b, 0) / 5);
 
         return {
           ...r,
@@ -126,7 +123,6 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
     }
   };
 
-  // Auto-fill logic on first load if empty
   useEffect(() => {
     if (!kekuatan && !kelemahan && !rekomendasi && recapData.length > 0) {
       generateAnalysis();
@@ -154,6 +150,9 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
     link.download = `Rekapitulasi_Supervisi_${activeSemester}.doc`;
     link.click();
   };
+
+  const supervisorName = settings.supervisors[0] || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
   return (
     <div className="animate-fadeIn space-y-6 pb-20">
@@ -195,7 +194,7 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
                 <th className="border border-slate-800 p-2">Telaah MA</th>
                 <th className="border border-slate-800 p-2">Pelaks. Pemb</th>
                 <th className="border border-slate-800 p-2">Penil. Pemb</th>
-                <th className="border border-slate-800 p-2 bg-rose-800 text-white font-black">Nilai Akhir</th>
+                <th className="border border-slate-800 p-2 bg-rose-800 text-white font-black">Nilai</th>
                 <th className="border border-slate-800 p-2 text-left w-1/4">Catatan Pelaksanaan</th>
               </tr>
             </thead>
@@ -220,7 +219,6 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
           </table>
         </div>
 
-        {/* Detailed Analysis Footer */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-t-4 border-slate-900 pt-6 break-inside-avoid">
            <div className="space-y-4">
               <div>
@@ -243,14 +241,33 @@ const SupervisionRecapView: React.FC<Props> = ({ settings, records, instrumentRe
            </div>
         </div>
 
-        <div className="mt-12 flex justify-end items-start text-xs font-bold uppercase tracking-tight px-4">
-          <div className="text-center w-64">
-             <p className="mb-20 uppercase">
-                Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
-                Kepala {settings.namaSekolah}
+        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight text-center px-4">
+          <div className="flex flex-col justify-between h-32">
+             <p className="uppercase">
+                Mengetahui,<br/>
+                Kepala Sekolah
              </p>
-             <p className="font-black underline">{settings.namaKepalaSekolah}</p>
-             <p className="text-[10px] font-mono tracking-tighter">NIP. {settings.nipKepalaSekolah}</p>
+             <div>
+               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
+             </div>
+          </div>
+          <div className="flex flex-col justify-between h-32">
+            <p className="uppercase">Supervisor</p>
+            <div>
+              <p className="font-black underline text-sm uppercase">{supervisorName}</p>
+              <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+            </div>
+          </div>
+          <div className="flex flex-col justify-between h-32">
+             <p className="uppercase">
+                Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
+                Ketua Tim Pengembang
+             </p>
+             <div>
+               <p className="font-black underline text-sm uppercase">................................................</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. ................................................</p>
+             </div>
           </div>
         </div>
       </div>

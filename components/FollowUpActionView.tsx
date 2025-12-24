@@ -57,23 +57,34 @@ const FollowUpActionView: React.FC<Props> = ({ settings, records, setSettings, i
     return records
       .filter(r => r.semester === activeSemester)
       .map(r => {
-        const scores = [r.nilaiAdm || 0, r.nilaiATP || 0, r.nilaiModul || 0, r.nilai || 0, r.nilaiPenilaian || 0];
-        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / 5);
+        // Dynamic score calculation identical to PTL
+        const getScore = (type: string, maxScore: number): number => {
+          const key = `${r.id}-${type}-${activeSemester}`;
+          const res = instrumentResults[key];
+          if (!res || !res.scores) return 0;
+          const vals = Object.values(res.scores).filter(v => typeof v === 'number') as number[];
+          const sum = vals.reduce((a, b) => a + b, 0);
+          return maxScore > 0 ? Math.round((sum / maxScore) * 100) : 0;
+        };
+
+        const sAdm = getScore('administrasi', 26);
+        const sATP = getScore('atp', 24);
+        const sModul = getScore('modul', 34); 
+        const sPBM = getScore('pembelajaran', 46); 
+        const sPenilaian = getScore('penilaian', 48);
+
+        const avg = Math.round((sAdm + sATP + sModul + sPBM + sPenilaian) / 5);
         
         const key = `${r.id}-followup-actions-${activeSemester}`;
         const savedActions = instrumentResults[key]?.actions || {
-          contoh: false,
-          tanyaJawab: false,
-          diskusi: false,
-          konsultasi: false,
-          pelatihan: false
+          contoh: false, tanyaJawab: false, diskusi: false, konsultasi: false, pelatihan: false
         };
 
         const rtl = getAutoActionRTL(avg, settings.scoreSettings.fair);
         return { ...r, avg, rtl, actions: savedActions };
       })
       .filter(r => r.avg < targetThreshold);
-  }, [records, activeSemester, instrumentResults, settings.scoreSettings]);
+  }, [records, activeSemester, instrumentResults, settings.scoreSettings, targetThreshold]);
 
   const latestSupervisionDate = useMemo(() => {
     if (data.length === 0) return null;
@@ -90,14 +101,13 @@ const FollowUpActionView: React.FC<Props> = ({ settings, records, setSettings, i
        setKekuatan(`Sebagian guru (${Math.round((records.length - data.length) / records.length * 100)}%) telah mencapai ambang batas kompetensi dan tidak memerlukan tindakan perbaikan intensif.`);
        setKelemahan(`Terdapat ${data.length} guru yang memerlukan intervensi khusus karena nilai rata-rata di bawah standar (${targetThreshold}). Fokus kelemahan pada konsistensi penyusunan dokumen dan manajemen waktu.`);
        setRekomendasi("Segera laksanakan program 'Pemberian Contoh' dan 'Pelatihan' terfokus untuk kelompok guru ini dalam 2 minggu ke depan.");
-    } else if (data.length === 0) {
+    } else {
        setKekuatan("Seluruh guru telah memenuhi standar minimal yang ditetapkan sekolah. Budaya mutu berjalan baik.");
        setKelemahan("Tidak ditemukan kelemahan mayor yang memerlukan tindakan perbaikan massal.");
        setRekomendasi("Fokus dialihkan ke program pengembangan prestasi dan inovasi pembelajaran (Advanced Training).");
     }
   };
 
-  // Auto-fill logic
   useEffect(() => {
     if (!kekuatan && !kelemahan && !rekomendasi) {
       generateAnalysis();
@@ -122,16 +132,8 @@ const FollowUpActionView: React.FC<Props> = ({ settings, records, setSettings, i
     html2pdf().from(element).save(`Laporan_Action_TL_Guru_${activeSemester}.pdf`);
   };
 
-  const exportWord = () => {
-    const content = document.getElementById('action-export-area')?.innerHTML;
-    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><style>table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid black; padding: 5px; font-size: 8pt; }</style></head><body>";
-    const footer = "</body></html>";
-    const blob = new Blob([header + content + footer], { type: 'application/msword' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `Laporan_Action_TL_Guru_${activeSemester}.doc`;
-    link.click();
-  };
+  const supervisorName = settings.supervisors[0] || settings.namaKepalaSekolah;
+  const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
   return (
     <div className="animate-fadeIn space-y-6 pb-20">
@@ -150,7 +152,6 @@ const FollowUpActionView: React.FC<Props> = ({ settings, records, setSettings, i
              Refresh Data
            </button>
            <button onClick={exportPDF} className="px-4 py-2 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase shadow-lg ml-2">PDF</button>
-           <button onClick={exportWord} className="px-4 py-2 bg-blue-800 text-white rounded-xl font-black text-[10px] uppercase shadow-lg ml-2">Word</button>
         </div>
       </div>
 
@@ -166,7 +167,7 @@ const FollowUpActionView: React.FC<Props> = ({ settings, records, setSettings, i
             <tr className="bg-slate-900 text-white uppercase text-center font-black">
               <th className="border border-slate-800 p-2 w-8">No</th>
               <th className="border border-slate-800 p-2 text-left">Nama Lengkap Guru</th>
-              <th className="border border-slate-800 p-2 w-14 bg-slate-800">Skor (%)</th>
+              <th className="border border-slate-800 p-2 w-14 bg-slate-800 text-yellow-400">Skor (%)</th>
               <th className="border border-slate-800 p-2 text-left">Rencana Tindak Lanjut (RTL)</th>
               <th className="border border-slate-800 p-1 w-16">Pemberian Contoh</th>
               <th className="border border-slate-800 p-1 w-16">Tanya Jawab</th>
@@ -200,7 +201,6 @@ const FollowUpActionView: React.FC<Props> = ({ settings, records, setSettings, i
           </tbody>
         </table>
 
-        {/* Detailed Analysis Footer */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 border-t-4 border-slate-900 pt-6 break-inside-avoid">
            <div className="space-y-4">
               <div>
@@ -223,14 +223,33 @@ const FollowUpActionView: React.FC<Props> = ({ settings, records, setSettings, i
            </div>
         </div>
 
-        <div className="mt-12 flex justify-end items-start text-xs font-bold uppercase tracking-tight px-4">
-          <div className="text-center w-64">
-             <p className="mb-20 uppercase">
-                Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
-                Kepala {settings.namaSekolah}
+        <div className="mt-16 grid grid-cols-3 gap-4 text-xs font-bold uppercase tracking-tight text-center px-4">
+          <div className="flex flex-col justify-between h-32">
+             <p className="uppercase">
+                Mengetahui,<br/>
+                Kepala Sekolah
              </p>
-             <p className="font-black underline">{settings.namaKepalaSekolah}</p>
-             <p className="text-[10px] font-mono tracking-tighter">NIP. {settings.nipKepalaSekolah}</p>
+             <div>
+               <p className="font-black underline text-sm uppercase">{settings.namaKepalaSekolah}</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {settings.nipKepalaSekolah}</p>
+             </div>
+          </div>
+          <div className="flex flex-col justify-between h-32">
+            <p className="uppercase">Supervisor</p>
+            <div>
+              <p className="font-black underline text-sm uppercase">{supervisorName}</p>
+              <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. {supervisorNIP}</p>
+            </div>
+          </div>
+          <div className="flex flex-col justify-between h-32">
+             <p className="uppercase">
+                Mojokerto, {addWorkDays(latestSupervisionDate || new Date().toISOString(), 5)}<br/>
+                Tim Monitoring & Evaluasi
+             </p>
+             <div>
+               <p className="font-black underline text-sm uppercase">................................................</p>
+               <p className="text-[10px] font-mono tracking-tighter uppercase">NIP. ................................................</p>
+             </div>
           </div>
         </div>
       </div>
