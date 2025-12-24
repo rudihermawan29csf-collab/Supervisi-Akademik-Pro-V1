@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { INITIAL_TEACHERS, DATA_PTT } from './constants';
 import { TeacherRecord, ViewType, AppSettings, SupervisionStatus, InstrumentResult, ExtraRecord, AdminRecord } from './types';
@@ -85,7 +86,11 @@ const App: React.FC = () => {
     setUploadedSchedules({});
   }, []);
 
-  const loadDataFromCloud = async () => {
+  const loadDataFromCloud = async (isManual = false) => {
+    if (isManual && !confirm("Muat data dari cloud? Data yang belum tersimpan di perangkat ini mungkin akan tertimpa.")) {
+      return;
+    }
+
     setIsSyncing(true);
     const cloudData = await fetchDataFromCloud();
     if (cloudData && cloudData.settings) {
@@ -97,7 +102,8 @@ const App: React.FC = () => {
       setInstrumentResults(cloudData.instrumentResults || {});
       setUploadedSchedules(cloudData.uploadedSchedules || {});
       setLastSyncStatus('success');
-    } else {
+      if (isManual) alert("Berhasil memuat data terbaru dari Cloud.");
+    } else if (!isManual) {
       loadDefaultState();
     }
     setIsSyncing(false);
@@ -120,6 +126,24 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  // Fungsi khusus untuk tombol "Simpan ke Cloud" manual
+  const handleManualSave = async () => {
+    setIsSyncing(true);
+    const fullData = { 
+      settings, records, pttRecords, extraRecords, adminRecords, 
+      instrumentResults, uploadedSchedules
+    };
+    const success = await syncDataToCloud(fullData);
+    if (success) {
+      setLastSyncStatus('success');
+      alert("Seluruh data berhasil diamankan ke Cloud Database.");
+    } else {
+      setLastSyncStatus('error');
+      alert("Gagal menyimpan ke Cloud. Cek koneksi Anda.");
+    }
+    setIsSyncing(false);
+  };
+
   const handleUpdateRecords = useCallback((newRecords: TeacherRecord[]) => {
     setRecords(newRecords);
     triggerCloudSync({ records: newRecords });
@@ -134,11 +158,8 @@ const App: React.FC = () => {
     const key = `${teacherId}-${type}-${semester}`;
     const newResults = { ...instrumentResults, [key]: data };
     
-    // Hitung ulang nilai komposit untuk record guru agar tersinkronisasi
     const newRecords = records.map(r => {
       if (r.id === teacherId) {
-        // Fungsi pembantu untuk mengambil skor dari hasil instrumen
-        // Fix: Explicitly typed return as number and used a more robust reduce logic to avoid arithmetic type mismatch errors
         const getVal = (t: string, max: number): number => {
           const res = newResults[`${teacherId}-${t}-${semester}`];
           if (!res || !res.scores) return 0;
@@ -155,13 +176,12 @@ const App: React.FC = () => {
         const sModul = getVal('modul', 34);
         const sPBM = getVal('pembelajaran', 46);
         const sPenilaian = getVal('penilaian', 48);
-
         const avg = Math.round((sAdm + sATP + sModul + sPBM + sPenilaian) / 5);
 
         return { 
           ...r, 
           status: SupervisionStatus.COMPLETED,
-          nilai: avg, // Link utama nilai ada di sini
+          nilai: avg,
           nilaiAdm: sAdm,
           nilaiATP: sATP,
           nilaiModul: sModul,
@@ -228,10 +248,14 @@ const App: React.FC = () => {
           <NavItem view="dashboard" label="Dashboard Utama" activeColor="bg-indigo-600" />
           <NavItem view="settings" label="Pengaturan Master" activeColor="bg-slate-700" />
           
-          <div className="pt-2 pb-1 border-t border-slate-800/50 mt-4">
-             <button onClick={() => loadDataFromCloud()} disabled={isSyncing} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600/10 text-blue-400 rounded-xl text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all">
+          <div className="pt-2 pb-1 border-t border-slate-800/50 mt-4 space-y-1">
+             <button onClick={() => handleManualSave()} disabled={isSyncing} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600/10 text-emerald-400 rounded-xl text-[10px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-all">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" strokeWidth="3" /></svg>
+                {isSyncing ? 'Menyimpan...' : 'Simpan ke Cloud'}
+             </button>
+             <button onClick={() => loadDataFromCloud(true)} disabled={isSyncing} className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600/10 text-blue-400 rounded-xl text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all">
                 <svg className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth="3" /></svg>
-                {isSyncing ? 'Memuat Cloud...' : 'Muat Data Cloud'}
+                Muat dari Cloud
              </button>
           </div>
 
@@ -321,10 +345,14 @@ const App: React.FC = () => {
             <h2 className="text-sm font-black text-slate-800 uppercase truncate">Manajemen Supervisi - {settings.namaSekolah || 'Memuat...'}</h2>
           </div>
           <div className="flex items-center gap-3">
-             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-tighter ${lastSyncStatus === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : lastSyncStatus === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+             <button 
+               onClick={handleManualSave}
+               disabled={isSyncing}
+               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[9px] font-black uppercase tracking-tighter transition-all ${lastSyncStatus === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : lastSyncStatus === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-slate-50 border-slate-200 text-slate-400'}`}
+             >
                 <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-blue-500 animate-pulse' : lastSyncStatus === 'success' ? 'bg-emerald-500' : lastSyncStatus === 'error' ? 'bg-red-500' : 'bg-slate-400'}`}></div>
-                {isSyncing ? 'Syncing...' : lastSyncStatus === 'success' ? 'Synced' : lastSyncStatus === 'error' ? 'Sync Error' : 'Offline'}
-             </div>
+                {isSyncing ? 'Simpan...' : lastSyncStatus === 'success' ? 'Database OK' : lastSyncStatus === 'error' ? 'Sync Error' : 'Offline'}
+             </button>
              <div className="text-right hidden md:block">
                 <span className="block text-[10px] font-black text-slate-800 uppercase">TP {settings.tahunPelajaran}</span>
                 <span className="block text-[9px] font-bold text-blue-600 uppercase">{settings.semester}</span>

@@ -65,7 +65,8 @@ const PostObservationView: React.FC<Props> = ({ settings, setSettings, records, 
     link.click();
   };
 
-  const supervisorName = selectedTeacher?.pewawancancara || settings.namaKepalaSekolah;
+  // Fix: Corrected property name from pewawancancara to pewawancara
+  const supervisorName = selectedTeacher?.pewawancara || settings.namaKepalaSekolah;
   const supervisorNIP = records.find(r => r.namaGuru === supervisorName)?.nip || (supervisorName === settings.namaKepalaSekolah ? settings.nipKepalaSekolah : '....................');
 
   return (
